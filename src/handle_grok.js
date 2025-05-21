@@ -1,5 +1,6 @@
 const DOMAIN_URL = "https://grok.com";
 const ASSETS_URL = "https://assets.grok.com";
+const GOOGLE_APIS_URL = "https://apis.google.com"; // 新增资源站
 
 export async function handleGrokRequest (req) {
 
@@ -15,6 +16,10 @@ export async function handleGrokRequest (req) {
     } else if (url.pathname.startsWith('/assets')) {
         targetPath = url.pathname.replace(/^\/assets/, '');
         domainUrl = ASSETS_URL
+    // 如果是 /googleapis 路径，移除前缀，重定到 Google APIs
+    } else if (url.pathname.startsWith('/googleapis')) {
+        targetPath = url.pathname.replace(/^\/googleapis/, '');
+        domainUrl = GOOGLE_APIS_URL;
     } else {
         // 其他 直接使用路径（可能是Grok内部请求）
         targetPath = url.pathname;
@@ -83,7 +88,8 @@ export async function handleGrokRequest (req) {
             // 替换assets.grok.com链接，让图片请求本地走代理
             if (contentType.includes("text/html")) {
                 const serverOrigin = new URL(req.url).origin;
-                decodedText = decodedText.replaceAll(ASSETS_URL, serverOrigin);
+                decodedText = decodedText.replaceAll(ASSETS_URL, serverOrigin + '/assets');
+                decodedText = decodedText.replaceAll(GOOGLE_APIS_URL, serverOrigin + '/googleapis'); // 新增替换逻辑
             }
             
             // 替换users/为assets/users/，适配本地图片地址
